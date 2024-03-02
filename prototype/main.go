@@ -9,6 +9,7 @@ func main () {
 	fmt.Println(out(300))
 }
 
+// this function must return 222232244629420445529739893461909967206666939096499764990979600
 func out(n int) string {
 	return dec(compute(n)).String()
 }

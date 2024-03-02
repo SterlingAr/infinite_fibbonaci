@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/big"
 )
 
@@ -65,8 +64,7 @@ func (f fibo) compute(n int) [][]byte {
 		}
 		sequences = append(sequences, seq)
 	}
-	return sequences
-}
+	return sequences}
 
 func (f fibo) computeOnly(n int) []byte {
 	// n2 + n1 = n0
@@ -80,7 +78,7 @@ func (f fibo) computeOnly(n int) []byte {
 		// 20^0 r[2], 20^1 r[3], 20^2 r[3] ...
 		powerUp := false
 		for j := 0; j <= rn; j++ {
-			// shit values to the left
+			// shift values to the left
 			r[j][0] = r[j][1]
 			r[j][1] = r[j][2]
 
@@ -103,11 +101,6 @@ func (f fibo) computeOnly(n int) []byte {
 			}
 			r[j][2] = c
 		}
-		var seq []byte
-		for i := 2; i <= len(r)-1; i++ {
-			seq = append(seq, r[i][2])
-		}
-		fmt.Println(dec(seq))
 	}
 	var seq []byte
 	for i := 2; i <= len(r)-1; i++ {
