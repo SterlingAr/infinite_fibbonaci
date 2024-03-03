@@ -3,35 +3,44 @@ package main
 import (
 	"fmt"
 	"math/big"
+	"os"
+	"strconv"
 	"time"
 )
 
 func main() {
-	// Number of iterations
-	// Initial value Q
-	// Initial value W
-	// Update for the next iteration
-	// Print current iteration result
+	arg := os.Args[1]
+	nth, err := strconv.Atoi(arg)
+	if err != nil {
+		fmt.Printf("invalid input %s %s \n", arg, err)
+		os.Exit(1)
+	}
 	t1 := time.Now().UnixMicro()
-	res := compute(144000)
+	res := compute(nth)
 	t2 := time.Now().UnixMicro()
 	fmt.Printf("elapsed time %d microseconds (%f sec) \n", t2-t1, float64((t2-t1))/1000000)
-	fmt.Printf("fibo: %s\n", res)
+	f, err := os.Create("result.txt")
+	if err != nil {
+		fmt.Printf("failed to create file %s \n",  err)
+		os.Exit(1)
+	}
+	fmt.Fprint(f, mayanLongCountDec(res).String())
 }
 
-func compute(n int) string {
-
+func compute(n int) []byte {
 	previous := []byte{1}
 	current := []byte{1}
 
 	for i := 1; i < n-1; i++ {
-		next := addColumns(previous, current)
+		next := addColumnsInPlace(previous, current)
 
-		previous = current
-		current = next
-		// fmt.Printf("Step %d: %v\n", i+1, current)
+		// Update for the next iteration
+		previous, current = current, next
+
+		// Optionally, print the current step
+		fmt.Printf("Step %d: %v\n", i+1, mayanLongCountDec(current).String())
 	}
-	return dec(current).String() 
+	return current
 }
 
 func dec(n []byte) *big.Int {
@@ -45,16 +54,40 @@ func dec(n []byte) *big.Int {
 	return res
 }
 
-// addColumns adds two slices of byte with carry-over.
-func addColumns(a, b []byte) []byte {
+// mayanLongCountDec converts a byte slice representing a Mayan Long Count date to a *big.Int
+func mayanLongCountDec(n []byte) *big.Int {
+	res := new(big.Int)
+	placeValue := big.NewInt(1)
+	base := int64(20)
+
+	for i, val := range n {
+		z := new(big.Int).Mul(placeValue, big.NewInt(int64(val)))
+		res.Add(res, z)
+
+		// Update placeValue for next iteration
+		if i == 0 {
+			base = 18 // Second position uses base-18
+		} else {
+			base = 20 // Reset to base-20 for subsequent positions
+		}
+		placeValue.Mul(placeValue, big.NewInt(base))
+	}
+
+	return res
+}
+
+// addColumnsInPlace adds two slices of byte with carry-over, updating the first slice in place.
+func addColumnsInPlace(a, b []byte) []byte {
 	maxLen := len(a)
 	if len(b) > maxLen {
+		// Extend 'a' to the length of 'b' if necessary
+		extended := make([]byte, len(b))
+		copy(extended, a)
+		a = extended
 		maxLen = len(b)
 	}
 
-	result := make([]byte, maxLen)
 	carry := byte(0)
-
 	for i := 0; i < maxLen; i++ {
 		sum := carry
 		if i < len(a) {
@@ -71,12 +104,12 @@ func addColumns(a, b []byte) []byte {
 			carry = 0
 		}
 
-		result[i] = sum
+		a[i] = sum
 	}
 
 	if carry > 0 {
-		result = append(result, carry)
+		a = append(a, carry)
 	}
 
-	return result
+	return a
 }
